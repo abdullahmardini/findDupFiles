@@ -17,7 +17,65 @@ type fileHash struct {
 	hash string
 }
 
-func findDuplicates(root string, totalFiles int64) {
+type fileInfo struct {
+	path string
+}
+
+func findDuplicates(rootPath string, totalFiles int64) error {
+	fileHashes := make(map[string][]fileInfo)
+
+	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Printf("Error reading %q: %v\n", path, err)
+			return err
+		}
+
+		if !info.Mode().IsRegular() || isExcluded(path) {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			fmt.Printf("Error opening %q: %v\n", path, err)
+			return nil
+		}
+		defer file.Close()
+
+		hashString, err := hashFile(path)
+		if err != nil {
+			fmt.Printf("Could not hash %q: %v\n", path, err)
+		}
+
+		fileHashes[hashString] = append(fileHashes[hashString], fileInfo{path: path})
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("error walking the path %q: %v", rootPath, err)
+	}
+
+	foundDuplicates := false
+	for hash, files := range fileHashes {
+		if len(files) >= 2 {
+			foundDuplicates = true
+			fmt.Printf("\n--- Duplicate Hash found ---\n")
+			fmt.Printf("Hash: %s\n", hash)
+			fmt.Printf("Files:\n")
+			for _, file := range files {
+				fmt.Printf("  - %s\n", file.path)
+			}
+		}
+	}
+
+	if !foundDuplicates {
+		fmt.Println("\nNo duplicate files found.")
+	}
+
+	return nil
+}
+
+func findDuplicatesConcurrent(root string, totalFiles int64) {
 	fileChan := make(chan string, 100)
 	resultChan := make(chan fileHash, 100)
 	var wg sync.WaitGroup
@@ -81,15 +139,15 @@ func findDuplicates(root string, totalFiles int64) {
 }
 
 func hashFile(path string) (string, error) {
-	f, err := os.Open(path)
+	file, err := os.Open(path)
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer file.Close()
 
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
 		return "", err
 	}
-	return hex.EncodeToString(h.Sum(nil)), nil
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
