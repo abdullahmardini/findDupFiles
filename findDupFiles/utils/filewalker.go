@@ -30,7 +30,7 @@ func IsExcluded(path string) bool {
 
 	for _, excl := range excludeDirs {
 		if strings.Contains(path, excl) {
-			log.Logger.Debug("Excluded files...", "path", path)
+			log.Debug("Excluded files...", "path", path)
 			return true
 		}
 	}
@@ -40,7 +40,7 @@ func IsExcluded(path string) bool {
 func CountFiles(root string) (int64, error) {
 	var total int64
 	err := WalkFiles(root, func(path string, info os.FileInfo) error {
-		log.Logger.Debug("Counting file:", "path", path)
+		log.Debug("Counting file:", "path", path)
 		atomic.AddInt64(&total, 1)
 		return nil
 	})

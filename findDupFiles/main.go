@@ -5,8 +5,6 @@ import (
 	"amardini/findDupFiles/log"
 	"amardini/findDupFiles/utils"
 	"flag"
-	"fmt"
-	"os"
 )
 
 func main() {
@@ -17,14 +15,13 @@ func main() {
 
 	log.Init(*debugPtr)
 
-	log.Logger.Info("Scanning directory:", "", root)
-	fmt.Println("Counting files...")
+	log.Info("Scanning directory: %s", root)
+	log.Info("Counting files...")
 	totalFiles, err := utils.CountFiles(root)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error counting files: %v\n", err)
-		return
+		log.Error("Error counting files: %v", err)
 	}
-	fmt.Printf("Found %d files\n", totalFiles)
+	log.Info("Found %d files\n", totalFiles)
 
 	dupes.FindDuplicates(root, totalFiles)
 }

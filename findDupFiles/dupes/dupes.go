@@ -5,6 +5,8 @@ import (
 	"amardini/findDupFiles/utils"
 	"fmt"
 	"os"
+	"strings"
+	"sync/atomic"
 )
 
 type fileInfo struct {
@@ -13,18 +15,25 @@ type fileInfo struct {
 
 func FindDuplicates(rootPath string, totalFiles int64) error {
 	fileHashes := make(map[string][]fileInfo)
+	var processed int64
 
 	err := utils.WalkFiles(rootPath, func(path string, info os.FileInfo) error {
+		curr := atomic.AddInt64(&processed, 1)
+
+		if curr%100 == 0 || curr == totalFiles {
+			percent := float64(curr) / float64(totalFiles) * 100
+			log.Info("Progress: %d, total: %d, percent: %g", curr, totalFiles, percent)
+		}
 		file, err := os.Open(path)
 		if err != nil {
-			fmt.Printf("Error opening %q: %v\n", path, err)
+			log.Error("Error opening %q: %v\n", path, err)
 			return nil
 		}
 		defer file.Close()
 
 		hashString, err := utils.HashFile(path)
 		if err != nil {
-			fmt.Printf("Could not hash %q: %v\n", path, err)
+			log.Error("Could not hash %q: %v\n", path, err)
 		}
 
 		fileHashes[hashString] = append(fileHashes[hashString], fileInfo{path: path})
@@ -40,17 +49,25 @@ func FindDuplicates(rootPath string, totalFiles int64) error {
 	for hash, files := range fileHashes {
 		if len(files) >= 2 {
 			foundDuplicates = true
-			fmt.Printf("\n--- Duplicate Hash found ---\n")
-			fmt.Printf("Hash: %s\n", hash)
-			fmt.Printf("Files:\n")
+			var paths []string
+
 			for _, file := range files {
-				fmt.Printf("  - %s\n", file.path)
+				paths = append(paths, file.path)
 			}
+
+			log.Info(
+				fmt.Sprintf(
+					"\nDuplicate hash found:\n  Hash: %s\n  Files (%d):\n    - %s\n",
+					hash,
+					len(paths),
+					strings.Join(paths, "\n    - "),
+				),
+			)
 		}
 	}
 
 	if !foundDuplicates {
-		log.Logger.Info("No duplicate files found.")
+		log.Info("No duplicate files found.")
 	}
 
 	return nil
