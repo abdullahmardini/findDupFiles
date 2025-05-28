@@ -1,13 +1,10 @@
 package dupes
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
+	"amardini/findDupFiles/log"
+	"amardini/findDupFiles/utils"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
 type fileInfo struct {
@@ -17,16 +14,7 @@ type fileInfo struct {
 func FindDuplicates(rootPath string, totalFiles int64) error {
 	fileHashes := make(map[string][]fileInfo)
 
-	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			fmt.Printf("Error reading %q: %v\n", path, err)
-			return err
-		}
-
-		if !info.Mode().IsRegular() || IsExcluded(path) {
-			return nil
-		}
-
+	err := utils.WalkFiles(rootPath, func(path string, info os.FileInfo) error {
 		file, err := os.Open(path)
 		if err != nil {
 			fmt.Printf("Error opening %q: %v\n", path, err)
@@ -34,7 +22,7 @@ func FindDuplicates(rootPath string, totalFiles int64) error {
 		}
 		defer file.Close()
 
-		hashString, err := hashFile(path)
+		hashString, err := utils.HashFile(path)
 		if err != nil {
 			fmt.Printf("Could not hash %q: %v\n", path, err)
 		}
@@ -62,38 +50,8 @@ func FindDuplicates(rootPath string, totalFiles int64) error {
 	}
 
 	if !foundDuplicates {
-		fmt.Println("\nNo duplicate files found.")
+		log.Logger.Info("No duplicate files found.")
 	}
 
 	return nil
-}
-
-func hashFile(path string) (string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	hasher := sha256.New()
-	if _, err := io.Copy(hasher, file); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(hasher.Sum(nil)), nil
-}
-
-func IsExcluded(path string) bool {
-	excludeDirs := []string{
-		".git",
-		"@snapshots",
-		".zfs/snapshot",
-		".cache",
-	}
-
-	for _, excl := range excludeDirs {
-		if strings.Contains(path, excl) {
-			return true
-		}
-	}
-	return false
 }
