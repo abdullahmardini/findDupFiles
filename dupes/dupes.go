@@ -22,18 +22,18 @@ func FindDuplicates(rootPath string, totalFiles int64) error {
 
 		if curr%100 == 0 || curr == totalFiles {
 			percent := float64(curr) / float64(totalFiles) * 100
-			log.Info("Progress: %d, total: %d, percent: %g", curr, totalFiles, percent)
+			log.Info("Progress: %.0f%% - %d / %d", percent, curr, totalFiles)
 		}
 		file, err := os.Open(path)
 		if err != nil {
-			log.Error("Error opening %q: %v\n", path, err)
+			log.Error("Error opening %q: %v", path, err)
 			return nil
 		}
 		defer file.Close()
 
 		hashString, err := utils.HashFile(path)
 		if err != nil {
-			log.Error("Could not hash %q: %v\n", path, err)
+			log.Error("Could not hash %q: %v", path, err)
 		}
 
 		fileHashes[hashString] = append(fileHashes[hashString], fileInfo{path: path})

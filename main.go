@@ -21,7 +21,7 @@ func main() {
 	if err != nil {
 		log.Error("Error counting files: %v", err)
 	}
-	log.Info("Found %d files\n", totalFiles)
+	log.Info("Found %d files", totalFiles)
 
 	dupes.FindDuplicates(root, totalFiles)
 }
