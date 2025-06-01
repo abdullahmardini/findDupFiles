@@ -10,9 +10,9 @@ import (
 func main() {
 	dirPtr := flag.String("dir", ".", "Directory to scan for duplicate files")
 	debugPtr := flag.Bool("debug", false, "Enable debug logging")
+
 	flag.Parse()
 	root := *dirPtr
-
 	log.Init(*debugPtr)
 
 	log.Info("Scanning directory: %s", root)

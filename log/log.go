@@ -34,6 +34,7 @@ func Info(msg string, args ...any) {
 func Error(msg string, args ...any) {
 	log.Printf(colorError+"[ERROR] "+msg+colorReset, args...)
 }
+
 func Debug(msg string, args ...any) {
 	if debugEnabled {
 		log.Printf(colorDebug+"[DEBUG] "+msg+colorReset, args...)
