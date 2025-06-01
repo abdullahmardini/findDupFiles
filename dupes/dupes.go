@@ -1,12 +1,13 @@
 package dupes
 
 import (
-	"amardini/findDupFiles/log"
-	"amardini/findDupFiles/utils"
 	"fmt"
 	"os"
 	"strings"
 	"sync/atomic"
+
+	"github.com/abdullahmardini/findDupFiles/log"
+	"github.com/abdullahmardini/findDupFiles/utils"
 )
 
 type fileInfo struct {

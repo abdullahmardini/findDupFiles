@@ -7,4 +7,4 @@ vars:
 
 tasks:
   build:
-    - go build -o finddupes main.go
+    - go build -o finddupes cmd/finddupfiles/main.go

@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"amardini/findDupFiles/log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
+
+	"github.com/abdullahmardini/findDupFiles/log"
 )
 
 func WalkFiles(root string, onFile func(path string, info os.FileInfo) error) error {
